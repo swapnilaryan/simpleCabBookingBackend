@@ -86,25 +86,38 @@ exports.makeCabRequest = function (req, res, next) {
 };
 
 exports.acceptRequest = function (req, res, next){
-    var query = "UPDATE ?? " +
-        "SET ??=?, ??=?, ??=? " +
-        "WHERE ?? = ? AND ??=?";
-    var values = ['cab_request_details',
-        'cr_driver_id', req.body.driver_id,
-        'cr_status', 'Ongoing',
-        'cr_request_accepted_time', moment().format("YYYY-MM-DD hh:mm:ss"),
-        'cr_status', 'Waiting', 'cr_customer_id', req.body.customer_id];
+    //Check if driver is on trip
+    var query = "SELECT COUNT(*) as count FROM cab_request_details WHERE cr_status='Ongoing' && cr_driver_id="+req.body.driver_id;
+    var values = [];
     db.get().query(query, values, function (err, rows) {
-        if(err){
-            return next(err);
-        }
-        query = "SELECT * FROM ?? WHERE ??=? AND ??=?";
-        values = ['cab_request_details', 'cr_driver_id', req.body.driver_id, 'cr_customer_id', req.body.customer_id];
+       if(err)
+           return next(err);
+        else if(rows[0].count>0) {
+           var error = {
+               message: "Can't Accept request as the driver is on trip "
+           };
+           return next(error);
+       }
+        query = "UPDATE ?? " +
+            "SET ??=?, ??=?, ??=? " +
+            "WHERE ?? = ? AND ??=?";
+        var values = ['cab_request_details',
+            'cr_driver_id', req.body.driver_id,
+            'cr_status', 'Ongoing',
+            'cr_request_accepted_time', moment().format("YYYY-MM-DD HH:mm:ss"),
+            'cr_status', 'Waiting', 'cr_customer_id', req.body.customer_id];
         db.get().query(query, values, function (err, rows) {
             if(err){
                 return next(err);
             }
-            res.status(200).send(rows);
+            query = "SELECT * FROM ?? WHERE ??=? AND ??=?";
+            values = ['cab_request_details', 'cr_driver_id', req.body.driver_id, 'cr_customer_id', req.body.customer_id];
+            db.get().query(query, values, function (err, rows) {
+                if(err){
+                    return next(err);
+                }
+                res.status(200).send(rows);
+            });
         });
     });
 };
@@ -115,7 +128,7 @@ exports.completeRequest = function (req, res, next){
         "WHERE ?? = ? AND ??=? AND ??=?";
     var values = ['cab_request_details',
         'cr_status', 'Complete',
-        'cr_request_completed_time', moment().format("YYYY-MM-DD hh:mm:ss"),
+        'cr_request_completed_time', req.body.completed_time,
         'cr_status', 'Ongoing', 'cr_customer_id', req.body.customer_id, 'cr_driver_id', req.body.driver_id];
     db.get().query(query, values, function (err, rows) {
         if(err){
