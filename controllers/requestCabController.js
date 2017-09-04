@@ -62,7 +62,7 @@ exports.makeCabRequest = function (req, res, next) {
         }
         var data = {
             tables: {
-                cab_request_details: [{cr_cusomter_id: req.body.cusomter_id}]
+                cab_request_details: [{cr_customer_id: req.body.customer_id}]
             }
         };
         db.fixtures(data, function (err) {
@@ -70,10 +70,10 @@ exports.makeCabRequest = function (req, res, next) {
                 return next(err);
             }
             var query = 'SELECT * FROM cab_request_details ' +
-                'WHERE cr_cusomter_id=? ' +
+                'WHERE cr_customer_id=? ' +
                 'ORDER BY cr_requested_time desc ' +
                 'LIMIT 1';
-            var values = [req.body.cusomter_id];
+            var values = [req.body.customer_id];
             db.get().query(query, values, function (err, rows) {
                 if (err) {
                     return next(err);

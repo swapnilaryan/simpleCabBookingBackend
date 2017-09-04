@@ -16,5 +16,6 @@ router.post('/createCustomer', customer_controller.createCustomer);
 router.post('/requestCab', request_cab_controller.makeCabRequest);
 router.post('/acceptCabRequest', request_cab_controller.acceptRequest);
 router.get('/getRequestsQueue', request_cab_controller.getRequestsQueue);
+router.get('/getAllRequestStatus', request_cab_controller.getAllRequestStatus);
 
 module.exports = router;
